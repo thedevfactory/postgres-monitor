@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:pgwat.ch)",
+      "WebFetch(domain:api.github.com)",
+      "Bash(node -c server.js)",
+      "Bash(psql --version)",
+      "Bash(node -c public/app.js)",
+      "Bash(timeout 8 node server.js)",
+      "Bash(curl -s http://localhost:3000/api/database-names)",
+      "Bash(curl -s http://localhost:3000/api/table-stats?db=AppMoni)",
+      "Bash(curl -s http://localhost:3000/api/topology?db=AppMoni)",
+      "Bash(grep -E \"\\\\.\\(js|html|css\\)$\")",
+      "Bash(grep -E \"\\\\.js$\")",
+      "Bash(grep -A1 \"innerHTML = \\\\`\")"
+    ]
+  }
+}

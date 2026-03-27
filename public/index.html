@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PostgreSQL Monitor</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="header-left">
+      <svg class="logo" viewBox="0 0 32 32" width="32" height="32"><path d="M16 2C8.268 2 2 8.268 2 16s6.268 14 14 14 14-6.268 14-14S23.732 2 16 2z" fill="#336791"/><text x="16" y="21" text-anchor="middle" fill="#fff" font-size="14" font-weight="bold" font-family="monospace">P</text></svg>
+      <h1>PostgreSQL Monitor</h1>
+    </div>
+    <div class="header-right">
+      <label class="db-selector-label">
+        DB
+        <select id="db-selector"><option>loading...</option></select>
+      </label>
+      <span class="db-separator"></span>
+      <span id="health-badge" class="badge badge-ok">--</span>
+      <span id="last-refresh" class="meta-text">--</span>
+      <label class="refresh-label">
+        Auto
+        <select id="refresh-interval">
+          <option value="0">Off</option>
+          <option value="5">5s</option>
+          <option value="10" selected>10s</option>
+          <option value="30">30s</option>
+          <option value="60">60s</option>
+        </select>
+      </label>
+      <button id="btn-refresh" class="btn btn-sm">Refresh</button>
+    </div>
+  </header>
+
+  <nav id="tabs">
+    <button class="tab active" data-tab="dashboard">Dashboard</button>
+    <button class="tab" data-tab="databases">Databases</button>
+    <button class="tab" data-tab="queries">Active Queries</button>
+    <button class="tab" data-tab="locks">Locks</button>
+    <button class="tab" data-tab="connections">Connections</button>
+    <button class="tab" data-tab="tables">Tables</button>
+    <button class="tab" data-tab="indexes">Indexes</button>
+    <button class="tab" data-tab="slow">Slow Queries</button>
+    <button class="tab" data-tab="replication">Replication</button>
+    <button class="tab" data-tab="internals">Internals</button>
+    <button class="tab" data-tab="topology">Topology</button>
+  </nav>
+
+  <main>
+    <!-- ══════ Dashboard ══════ -->
+    <section id="tab-dashboard" class="tab-content active">
+      <div id="server-info" class="card">
+        <h2>Server Information</h2>
+        <div id="server-info-body" class="card-body"><p class="placeholder">Loading...</p></div>
+      </div>
+      <div id="sparklines-card" class="card">
+        <h2>Trends (last ~10 min)</h2>
+        <div id="sparklines-body" class="card-body"><p class="placeholder">Collecting data...</p></div>
+      </div>
+      <div id="xid-wrap-card" class="card">
+        <h2>XID Wraparound Risk</h2>
+        <div id="xid-wrap-body" class="card-body"><p class="placeholder">Loading...</p></div>
+      </div>
+      <div id="health-checks" class="card">
+        <h2>Health Checks</h2>
+        <div id="health-checks-body" class="card-body"><p class="placeholder">Loading...</p></div>
+      </div>
+      <div id="recommendations-card" class="card">
+        <h2>Recommendations</h2>
+        <div id="recommendations-body" class="card-body"><p class="placeholder">Loading...</p></div>
+      </div>
+      <div id="long-queries-card" class="card">
+        <h2>Long-Running Queries (&gt;5s)</h2>
+        <div id="long-queries-body" class="card-body"><p class="placeholder">Loading...</p></div>
+      </div>
+      <div id="blocking-card" class="card">
+        <h2>Blocking Chains</h2>
+        <div id="blocking-body" class="card-body"><p class="placeholder">Loading...</p></div>
+      </div>
+    </section>
+
+    <!-- ══════ Databases ══════ -->
+    <section id="tab-databases" class="tab-content">
+      <div class="card full">
+        <h2>All Databases</h2>
+        <div id="databases-body" class="card-body"><p class="placeholder">Loading...</p></div>
+      </div>
+    </section>
+
+    <!-- ══════ Active Queries ══════ -->
+    <section id="tab-queries" class="tab-content">
+      <div class="card full">
+        <h2>Active Queries</h2>
+        <div class="toolbar">
+          <label><input type="checkbox" id="show-idle" /> Show idle connections</label>
+        </div>
+        <div id="queries-body" class="card-body"><p class="placeholder">Loading...</p></div>
+      </div>
+    </section>
+
+    <!-- ══════ Locks ══════ -->
+    <section id="tab-locks" class="tab-content">
+      <div class="card full">
+        <h2>Current Locks</h2>
+        <div id="locks-body" class="card-body"><p class="placeholder">Loading...</p></div>
+      </div>
+    </section>
+
+    <!-- ══════ Connections ══════ -->
+    <section id="tab-connections" class="tab-content">
+      <div id="conn-summary" class="card">
+        <h2>Connection Summary</h2>
+        <div id="conn-summary-body" class="card-body"><p class="placeholder">Loading...</p></div>
+      </div>
+      <div class="card full">
+        <h2>Connection Details</h2>
+        <div id="conn-details-body" class="card-body"><p class="placeholder">Loading...</p></div>
+      </div>
+    </section>
+
+    <!-- ══════ Tables (+ Bloat, Sequences, I/O) ══════ -->
+    <section id="tab-tables" class="tab-content">
+      <div class="card full">
+        <h2>Table Statistics <span class="db-context-label"></span></h2>
+        <div id="tables-body" class="card-body"><p class="placeholder">Loading...</p></div>
+      </div>
+      <div class="card full">
+        <h2>Table Bloat Estimation</h2>
+        <div id="bloat-body" class="card-body"><p class="placeholder">Loading...</p></div>
+      </div>
+      <div class="card full">
+        <h2>Sequence Health</h2>
+        <div id="sequences-body" class="card-body"><p class="placeholder">Loading...</p></div>
+      </div>
+      <div class="card full">
+        <h2>Table I/O Statistics</h2>
+        <div id="table-io-body" class="card-body"><p class="placeholder">Loading...</p></div>
+      </div>
+    </section>
+
+    <!-- ══════ Indexes (+ Invalid, Duplicates) ══════ -->
+    <section id="tab-indexes" class="tab-content">
+      <div id="invalid-idx-banner"></div>
+      <div class="card full">
+        <h2>Index Statistics <span class="db-context-label"></span></h2>
+        <div id="indexes-body" class="card-body"><p class="placeholder">Loading...</p></div>
+      </div>
+      <div class="card full">
+        <h2>Duplicate Indexes</h2>
+        <div id="dup-indexes-body" class="card-body"><p class="placeholder">Loading...</p></div>
+      </div>
+    </section>
+
+    <!-- ══════ Slow Queries (+ Function Stats) ══════ -->
+    <section id="tab-slow" class="tab-content">
+      <div class="card full">
+        <h2>Top Queries by Total Time (pg_stat_statements)</h2>
+        <div id="slow-body" class="card-body"><p class="placeholder">Loading...</p></div>
+      </div>
+      <div class="card full">
+        <h2>Function / Procedure Statistics</h2>
+        <div id="function-stats-body" class="card-body"><p class="placeholder">Loading...</p></div>
+      </div>
+    </section>
+
+    <!-- ══════ Replication (+ Archiver, Slots, Conflicts) ══════ -->
+    <section id="tab-replication" class="tab-content">
+      <div class="card">
+        <h2>WAL Archiver</h2>
+        <div id="archiver-body" class="card-body"><p class="placeholder">Loading...</p></div>
+      </div>
+      <div class="card full">
+        <h2>Replication Status</h2>
+        <div id="replication-body" class="card-body"><p class="placeholder">Loading...</p></div>
+      </div>
+      <div class="card full">
+        <h2>Replication Slots</h2>
+        <div id="repl-slots-body" class="card-body"><p class="placeholder">Loading...</p></div>
+      </div>
+      <div class="card full">
+        <h2>Database Conflicts (Standby)</h2>
+        <div id="db-conflicts-body" class="card-body"><p class="placeholder">Loading...</p></div>
+      </div>
+    </section>
+
+    <!-- ══════ Internals (WAL/Checkpoint, Buffer Cache, Config) ══════ -->
+    <section id="tab-internals" class="tab-content">
+      <div class="card">
+        <h2>WAL &amp; Checkpoint Statistics</h2>
+        <div id="wal-checkpoint-body" class="card-body"><p class="placeholder">Loading...</p></div>
+      </div>
+      <div class="card full">
+        <h2>Buffer Cache Breakdown</h2>
+        <div id="buffer-cache-body" class="card-body"><p class="placeholder">Loading...</p></div>
+      </div>
+      <div class="card full">
+        <h2>Configuration (Non-Default Settings)</h2>
+        <div id="config-body" class="card-body"><p class="placeholder">Loading...</p></div>
+      </div>
+    </section>
+    <!-- ══════ Topology ══════ -->
+    <section id="tab-topology" class="tab-content">
+      <div class="card full">
+        <h2>Server Topology</h2>
+        <div id="topology-body" class="card-body"><p class="placeholder">Loading...</p></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Query Side Panel -->
+  <div id="query-panel" class="query-panel" hidden>
+    <div class="query-panel-header">
+      <h3 id="query-panel-title">Queries</h3>
+      <button class="modal-close" data-query-panel-close>&times;</button>
+    </div>
+    <div class="query-panel-tabs">
+      <button class="query-panel-tab active" data-qptab="running">Running <span id="qp-running-count" class="qp-count">0</span></button>
+      <button class="query-panel-tab" data-qptab="recent">Recent 5m <span id="qp-recent-count" class="qp-count">0</span></button>
+    </div>
+    <div id="query-panel-body" class="query-panel-body"></div>
+    <div class="query-panel-footer">
+      <span id="qp-last-update" class="qp-footer-text"></span>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <!-- Health Action Modal -->
+  <div id="action-modal" class="modal-overlay" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="action-modal-title"></h3>
+        <button class="modal-close" data-modal-close>&times;</button>
+      </div>
+      <div id="action-modal-body" class="modal-body"></div>
+      <div id="action-modal-footer" class="modal-footer">
+        <button class="btn btn-sm" id="action-modal-cancel" data-modal-close>Cancel</button>
+        <button class="btn btn-sm btn-warn" id="action-modal-run">Execute</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
