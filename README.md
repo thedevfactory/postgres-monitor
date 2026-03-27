@@ -4,6 +4,10 @@ A real-time web-based monitoring dashboard for PostgreSQL. No external monitorin
 
 ![PostgreSQL Monitor](https://img.shields.io/badge/PostgreSQL-Monitor-336791?style=flat&logo=postgresql)
 
+
+<img width="1062" height="798" alt="Topology View" src="https://github.com/user-attachments/assets/87728dec-d922-4ab1-b49f-01630f83d0ab" />
+
+
 ---
 
 ## Features
